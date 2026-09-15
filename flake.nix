@@ -2,7 +2,7 @@
   description = "Flake for the itempool crate";
 
   inputs = {
-    harbor-rs.url = "git+https://github.com/caniko/harbor-rs.git?ref=trunk&rev=891cf7c2827e61ed4b07e3caef6efe0543b0d5d0";
+    harbor-rs.url = "git+https://github.com/caniko/harbor-rs.git?ref=trunk&rev=de6a15f5c102a63b14430fc09f73f9af02606ca6";
     nixpkgs.follows = "harbor-rs/nixpkgs";
     rust-overlay.follows = "harbor-rs/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
