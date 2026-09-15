@@ -43,7 +43,7 @@
         inherit src;
         strictDeps = true;
 
-        buildInputs = lib.optionals pkgs.stdenv.isDarwin [
+        buildInputs = lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
           pkgs.libiconv
         ];
       };
