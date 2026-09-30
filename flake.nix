@@ -33,6 +33,7 @@
         inherit pkgs;
         sccachePackage = harbor-rs.packages.${system}.sccache;
         cacheRoot = null;
+        ephemeralFallback = true;
         namespaceScope = "canix-rust";
         namespaceGeneration = 5;
       };
