@@ -8,12 +8,7 @@ repository = "https://github.com/caniko/itempool"
 readme = "README.md"
 keywords = ["gaming", "propability", "random", "bevy"]
 categories = ["algorithms", "data-structures", "game-development"]
-exclude = [
-    ".envrc",
-    "flake.nix",
-    "flake.lock",
-    ".github/",
-]
+exclude = [".envrc", "flake.nix", "flake.lock", ".github/"]
 
 [dependencies]
 rand = { version = "^0.9.0", features = ["thread_rng"] }

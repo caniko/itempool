@@ -2,36 +2,46 @@
   description = "Flake for the itempool crate";
 
   inputs = {
-    harbor-rs.url = "git+https://github.com/caniko/harbor-rs.git?ref=trunk&rev=ed89d0b13fc61dd1b2217bf4bba97f32cec27ba7";
-    nixpkgs.follows = "harbor-rs/nixpkgs";
-    rust-overlay.follows = "harbor-rs/rust-overlay";
+    harbor.url = "git+https://github.com/caniko/harbor.git?ref=feat/harbor-monorepo-components&rev=e8b1996580e4ecd51dd402edf4a16d9df88e3a1b";
+    nixpkgs.follows = "harbor/nixpkgs";
+    rust-overlay.follows = "harbor/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = {
     self,
     nixpkgs,
-    harbor-rs,
+    harbor,
     flake-utils,
     rust-overlay,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [(import rust-overlay)];
-      };
+      pkgs =
+        import (
+          if system == "x86_64-darwin"
+          then harbor.inputs.nixpkgs-darwin
+          else nixpkgs
+        ) {
+          inherit system;
+          overlays = [(import rust-overlay)];
+        };
 
       inherit (pkgs) lib;
 
-      toolchain = harbor-rs.lib.mkToolchain {
+      toolchain = harbor.lib.rust.mkToolchain {
         inherit pkgs;
         toolchainProfile = "stable";
       };
       inherit (toolchain) rustToolchain craneLib;
-      buildCache = harbor-rs.lib.mkBuildCachePolicy {
+      treefmtEval = harbor.inputs.treefmt-nix.lib.evalModule pkgs {
+        imports = [harbor.treefmtModules.core-nix harbor.treefmtModules.core-toml harbor.treefmtModules.rust-rust];
+        projectRootFile = "flake.nix";
+        programs.rustfmt.package = rustToolchain;
+      };
+      buildCache = harbor.lib.rust.mkBuildCachePolicy {
         inherit pkgs;
-        sccachePackage = harbor-rs.packages.${system}.sccache;
+        sccachePackage = harbor.packages.${system}.rust-sccache;
         cacheRoot = null;
         ephemeralFallback = true;
         namespaceScope = "canix-rust";
@@ -62,6 +72,7 @@
           });
       };
     in {
+      formatter = treefmtEval.config.build.wrapper;
       checks = {
         # Build the crate as part of `nix flake check` for convenience
         inherit my-crate;
@@ -75,9 +86,7 @@
           });
 
         # Check formatting
-        my-crate-fmt = craneLib.cargoFmt {
-          inherit src;
-        };
+        my-crate-fmt = treefmtEval.config.build.check self;
 
         # Run tests
         my-crate-nextest = craneLib.cargoNextest (commonArgs
@@ -101,7 +110,7 @@
         checks = self.checks.${system};
 
         # Extra inputs can be added here; cargo and rustc are provided by default.
-        packages = [];
+        packages = [treefmtEval.config.build.wrapper];
       };
     });
 }
